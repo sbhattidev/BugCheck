@@ -1,0 +1,178 @@
+body {
+  margin: 0;
+  background: #0f0f0f;
+  font-family: "Inter", sans-serif;
+  color: #eee;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+}
+
+.layout {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: #111;
+  border-right: 1px solid #222;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h2 {
+  margin-top: 0;
+  font-size: 18px;
+  color: #fff;
+  text-align: center;
+}
+
+.add-box {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.add-box input {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #181818;
+  color: #fff;
+}
+
+.add-box button {
+  padding: 6px 10px;
+  background: #333;
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.add-box button:hover { background: #444; }
+
+#subList {
+  overflow-y: auto;
+  flex: 1;
+  margin-top: 10px;
+}
+
+.sub-item {
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #181818;
+  margin-bottom: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #ccc;
+}
+.sub-item:hover { background: #222; }
+.sub-item.active { background: #0057ff; color: #fff; }
+
+/* Main */
+.main {
+  flex: 1;
+  padding: 20px;
+}
+
+.top-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.top-actions button {
+  padding: 8px 14px;
+  background: #222;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.top-actions button:hover { background: #333; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.tabs button {
+  padding: 7px 16px;
+  border: none;
+  background: #333;
+  color: #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.tabs button.active {
+  background: #0057ff;
+  color: #fff;
+}
+
+/* Checklist */
+.section {
+  background: #121212;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border: 1px solid #222;
+}
+
+.section h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 17px;
+  color: #fff;
+}
+
+/* --- FIXED ALIGNMENT HERE --- */
+.check-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  padding: 7px 0;
+  border-bottom: 1px solid #222;
+}
+
+.label-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ccc;
+}
+.label-check input { transform: scale(1.1); }
+
+/* Vulnerability name aligned right */
+.item-text {
+  margin-left: auto;
+  font-size: 14px;
+  color: #eee;
+  font-weight: 500;
+}
+
+/* Notes */
+#notesBox {
+  margin-top: 25px;
+}
+
+#notesArea {
+  width: 100%;
+  background: #181818;
+  border: 1px solid #333;
+  padding: 10px;
+  border-radius: 8px;
+  color: #fff;
+  resize: vertical;
+}
+#notesArea:disabled {
+  opacity: .5;
+}

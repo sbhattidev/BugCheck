@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bug Bounty Checklist – Subdomain Mode</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="layout">
+
+  <div class="sidebar">
+    <h2>Subdomains</h2>
+    <div class="add-box">
+      <input id="subInput" placeholder="sub.target.com" />
+      <button onclick="addSub()">Add</button>
+    </div>
+    <div id="subList"></div>
+  </div>
+
+  <div class="main">
+    <div class="top-actions">
+      <button onclick="exportJSON()">Export JSON</button>
+      <button onclick="importJSON()">Import JSON</button>
+      <button onclick="showSummary()">Summary</button>
+      <button onclick="resetAll()">Reset All</button>
+    </div>
+
+    <div class="tabs" id="tabButtons"></div>
+    <div id="list"></div>
+
+    <div id="notesBox" class="section">
+      <h3>Notes</h3>
+      <textarea id="notesArea" rows="6" placeholder="Research notes, PoC, steps, references..."></textarea>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
