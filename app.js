@@ -1,166 +1,166 @@
-/* -------------------------
-   Templates loaded from bugs.js
-   ------------------------- */
-// templates variable comes from bugs.js
-
-const STORAGE_KEY = "bb_subdomain_mode_v4";
+/* Templates come from bugs.js */
+const STORAGE_KEY = "bb_subdomain_mode_v5";
 let state = loadState();
 let currentSub = null;
 let currentTab = Object.keys(templates)[0];
 let inSummary = false;
 
-/* -------------------------
-   Load / Save
-   ------------------------- */
+/* Load & Save */
 function loadState() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { subdomains: {} };
-  } catch (e) {
-    return { subdomains: {} };
-  }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { subdomains:{} }; }
+  catch(e){ return { subdomains:{} }; }
 }
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
-/* -------------------------
-   Ensure subdomain structure
-   ------------------------- */
-function ensureSubdomain(name) {
-  if (!state.subdomains[name]) {
-    state.subdomains[name] = { tabs: {} };
-    for (const t of Object.keys(templates)) {
-      state.subdomains[name].tabs[t] = { checked: {}, notes: "" };
+/* Ensure structure */
+function ensureSubdomain(name){
+  if(!state.subdomains[name]){
+    state.subdomains[name] = { tabs:{} };
+    for(const t of Object.keys(templates)){
+      state.subdomains[name].tabs[t] = { checked:{}, notes:"" };
     }
     saveState();
   }
 }
 
-/* -------------------------
-   UI actions
-   ------------------------- */
-function addSub() {
-  const v = document.getElementById("subInput").value.trim();
-  if (!v) return;
+/* Add */
+function addSub(){
+  const v = subInput.value.trim();
+  if(!v) return;
   ensureSubdomain(v);
   currentSub = v;
-  document.getElementById("subInput").value = "";
+  subInput.value = "";
   inSummary = false;
   render();
 }
 
-function renderSubList() {
-  const wrap = document.getElementById("subList");
-  wrap.innerHTML = "";
-  const keys = Object.keys(state.subdomains);
-  if (keys.length === 0) {
-    const hint = document.createElement("div");
-    hint.className = "small muted";
-    hint.textContent = "Add a subdomain to start.";
-    wrap.appendChild(hint);
-    return;
-  }
-  keys.forEach((s) => {
-    const d = document.createElement("div");
-    d.className = "sub-item" + (s === currentSub ? " active" : "");
-    d.textContent = s;
-    d.onclick = () => {
-      currentSub = s;
-      inSummary = false;
-      render();
-    };
-    wrap.appendChild(d);
+/* Rename */
+function renameSub(old){
+  const n = prompt("Rename subdomain:", old);
+  if(!n || n.trim()==="" || n===old) return;
+  state.subdomains[n] = state.subdomains[old];
+  delete state.subdomains[old];
+  if(currentSub===old) currentSub=n;
+  saveState();
+  render();
+}
+
+/* Delete */
+function deleteSub(name){
+  if(!confirm("Delete " + name + "?")) return;
+  delete state.subdomains[name];
+  if(currentSub===name) currentSub=null;
+  saveState();
+  render();
+}
+
+/* Sidebar list */
+function renderSubList(){
+  const wrap=subList;
+  wrap.innerHTML="";
+
+  Object.keys(state.subdomains).forEach(s=>{
+    const row=document.createElement("div");
+    row.className="sub-item"+(s===currentSub?" active":"");
+
+    const nameSpan=document.createElement("span");
+    nameSpan.textContent=s;
+    nameSpan.style.cursor="pointer";
+    nameSpan.onclick=()=>{ currentSub=s; inSummary=false; render(); };
+
+    const btns=document.createElement("div");
+    btns.style.display="flex";
+    btns.style.gap="4px";
+
+    const edit=document.createElement("button");
+    edit.textContent="✏";
+    edit.style.padding="2px 6px";
+    edit.onclick=()=>renameSub(s);
+
+    const del=document.createElement("button");
+    del.textContent="🗑";
+    del.style.padding="2px 6px";
+    del.onclick=()=>deleteSub(s);
+
+    btns.append(edit,del);
+    row.append(nameSpan,btns);
+    row.style.display="flex";
+    row.style.justifyContent="space-between";
+    row.style.alignItems="center";
+
+    wrap.appendChild(row);
   });
 }
 
-/* -------------------------
-   Tabs
-   ------------------------- */
-function renderTabs() {
-  const tb = document.getElementById("tabButtons");
-  tb.innerHTML = "";
-  if (inSummary) return; // hide tabs in summary view
-  Object.keys(templates).forEach((t) => {
-    const b = document.createElement("button");
-    b.textContent = t;
-    b.className = t === currentTab ? "active" : "";
-    b.onclick = () => {
-      currentTab = t;
-      render();
-    };
+/* Tabs */
+function renderTabs(){
+  const tb=tabButtons;
+  tb.innerHTML="";
+  if(inSummary) return;
+
+  Object.keys(templates).forEach(t=>{
+    const b=document.createElement("button");
+    b.textContent=t;
+    b.className=(t===currentTab?"active":"");
+    b.onclick=()=>{ currentTab=t; render(); };
     tb.appendChild(b);
   });
 }
 
-/* -------------------------
-   Checklist
-   ------------------------- */
-function renderChecklist() {
-  const root = document.getElementById("list");
-  root.innerHTML = "";
-  if (inSummary || !currentSub) return;
+/* Checklist */
+function renderChecklist(){
+  list.innerHTML="";
+  if(inSummary || !currentSub) return;
 
   const data = state.subdomains[currentSub].tabs[currentTab];
 
-  for (const sec in templates[currentTab]) {
-    const box = document.createElement("div");
-    box.className = "section";
-    box.innerHTML = `<h3>${sec}</h3>`;
+  for(const sec in templates[currentTab]){
+    const box=document.createElement("div");
+    box.className="section";
+    box.innerHTML=`<h3>${sec}</h3>`;
 
-    templates[currentTab][sec].forEach((bug) => {
-      const key = bug.text;
-      if (!data.checked[key]) data.checked[key] = { scanned: false, found: false };
+    templates[currentTab][sec].forEach(bug=>{
+      const key=bug.text;
+      if(!data.checked[key]) data.checked[key]={scanned:false,found:false};
 
-      const row = document.createElement("div");
-      row.className = "check-row";
-      row.innerHTML = `
-        <label class="label-check">
-          <input type="checkbox" ${data.checked[key].scanned ? "checked" : ""}
-            onchange="state.subdomains['${currentSub}'].tabs['${currentTab}'].checked['${key}'].scanned=this.checked; saveState();">
-          Scanned
-        </label>
-        <label class="label-check">
-          <input type="checkbox" ${data.checked[key].found ? "checked" : ""}
-            onchange="state.subdomains['${currentSub}'].tabs['${currentTab}'].checked['${key}'].found=this.checked; saveState();">
-          Found
-        </label>
-        <span class="item-text">
-          ${bug.text}
+      const row=document.createElement("div");
+      row.className="check-row";
+
+      row.innerHTML=`
+        <label><input type="checkbox" ${data.checked[key].scanned?"checked":""}
+          onchange="state.subdomains['${currentSub}'].tabs['${currentTab}'].checked['${key}'].scanned=this.checked; saveState();"> Scanned</label>
+
+        <label><input type="checkbox" ${data.checked[key].found?"checked":""}
+          onchange="state.subdomains['${currentSub}'].tabs['${currentTab}'].checked['${key}'].found=this.checked; saveState();"> Found</label>
+
+        <span class="item-text">${bug.text}
           <span class="sev-tag ${bug.severity.toLowerCase()}">${bug.severity}</span>
         </span>
       `;
       box.appendChild(row);
     });
 
-    root.appendChild(box);
+    list.appendChild(box);
   }
 }
 
-/* -------------------------
-   Notes
-   ------------------------- */
-function renderNotes() {
-  const notesEl = document.getElementById("notesArea");
-  if (inSummary || !currentSub) {
-    notesEl.value = "";
-    notesEl.disabled = true;
+/* Notes */
+function renderNotes(){
+  if(inSummary || !currentSub){
+    notesArea.value="";
+    notesArea.disabled=true;
     return;
   }
-  notesEl.disabled = false;
-  notesEl.value = state.subdomains[currentSub].tabs[currentTab].notes || "";
-  notesEl.oninput = () => {
-    state.subdomains[currentSub].tabs[currentTab].notes = notesEl.value;
+  notesArea.disabled=false;
+  notesArea.value=state.subdomains[currentSub].tabs[currentTab].notes||"";
+  notesArea.oninput=()=>{
+    state.subdomains[currentSub].tabs[currentTab].notes=notesArea.value;
     saveState();
   };
 }
 
-/* -------------------------
-   Summary
-   ------------------------- */
-function showSummary() {
-  inSummary = true;
-  render();
-}
+/* Summary */
+function showSummary(){ inSummary=true; render(); }
 
 function renderSummary() {
   const root = document.getElementById("list");
@@ -168,143 +168,111 @@ function renderSummary() {
 
   const container = document.createElement("div");
   container.className = "section";
+  container.innerHTML = `<h3>Summary</h3>`;
 
-  const title = document.createElement("h3");
-  title.textContent = "Summary";
-  container.appendChild(title);
-
-  const overall = { totalItems: 0, scanned: 0, found: 0 };
+  let totalAll = 0, scannedAll = 0, foundAll = 0;
 
   Object.keys(state.subdomains).forEach((domain) => {
-    const domBox = document.createElement("div");
-    domBox.style.marginBottom = "12px";
-    const dh = document.createElement("div");
-    dh.style.fontWeight = "700";
-    dh.style.marginBottom = "6px";
-    dh.textContent = domain;
-    domBox.appendChild(dh);
+    const subBox = document.createElement("div");
+    subBox.className = "summary-subdomain";
+
+    const title = document.createElement("h4");
+    title.textContent = domain;
+    subBox.appendChild(title);
 
     Object.keys(templates).forEach((tab) => {
-      const tabRow = document.createElement("div");
-      tabRow.style.display = "flex";
-      tabRow.style.gap = "12px";
-      tabRow.style.alignItems = "center";
-      tabRow.style.marginBottom = "6px";
-
-      const tabTitle = document.createElement("div");
-      tabTitle.style.width = "120px";
-      tabTitle.textContent = tab;
-      tabTitle.style.fontWeight = "600";
-      tabRow.appendChild(tabTitle);
-
-      let tabTotal = 0,
-        tabScanned = 0,
-        tabFound = 0;
+      let total = 0, scanned = 0, found = 0;
       const tabState = state.subdomains[domain].tabs[tab] || { checked: {} };
-      Object.keys(templates[tab]).forEach((section) => {
-        templates[tab][section].forEach((bug) => {
-          tabTotal++;
+
+      Object.keys(templates[tab]).forEach(section => {
+        templates[tab][section].forEach(bug => {
+          total++;
           const key = bug.text;
-          if (tabState.checked && tabState.checked[key]) {
-            if (tabState.checked[key].scanned) tabScanned++;
-            if (tabState.checked[key].found) tabFound++;
+          if (tabState.checked[key]) {
+            if (tabState.checked[key].scanned) scanned++;
+            if (tabState.checked[key].found) found++;
           }
         });
       });
 
-      overall.totalItems += tabTotal;
-      overall.scanned += tabScanned;
-      overall.found += tabFound;
+      totalAll += total;
+      scannedAll += scanned;
+      foundAll += found;
 
-      const counts = document.createElement("div");
-      counts.textContent = `Items: ${tabTotal} • Scanned: ${tabScanned} • Found: ${tabFound}`;
-      tabRow.appendChild(counts);
-      domBox.appendChild(tabRow);
+      const row = document.createElement("div");
+      row.className = "summary-row";
+      row.innerHTML = `
+        <div class="summary-label">${tab} — Scanned: ${scanned}/${total} • Found: ${found}</div>
+        <div class="progress-wrap">
+          <div class="progress-bar" style="width:${total ? (scanned / total) * 100 : 0}%"></div>
+        </div>
+      `;
+      subBox.appendChild(row);
     });
 
-    container.appendChild(domBox);
+    container.appendChild(subBox);
   });
 
   const totalBox = document.createElement("div");
-  totalBox.style.marginTop = "12px";
-  totalBox.style.fontWeight = "700";
-  totalBox.textContent = `Overall — Items: ${overall.totalItems} • Scanned: ${overall.scanned} • Found: ${overall.found}`;
+  totalBox.className = "summary-total";
+  const percent = totalAll ? Math.round((scannedAll / totalAll) * 100) : 0;
+  totalBox.textContent = `TOTAL PROGRESS — ${percent}%  (Scanned ${scannedAll}/${totalAll} • Found ${foundAll})`;
   container.appendChild(totalBox);
 
-  const back = document.createElement("div");
+  const back = document.createElement("button");
+  back.textContent = "← Back to Checklist";
+  back.className = "back-btn";
   back.style.marginTop = "14px";
-  const btn = document.createElement("button");
-  btn.textContent = "Back to checklist";
-  btn.onclick = () => {
-    inSummary = false;
-    render();
-  };
-  btn.className = "back-btn";
-  back.appendChild(btn);
-  container.appendChild(back);
+  back.onclick = () => { inSummary = false; render(); };
 
+  container.appendChild(back);
   root.appendChild(container);
 }
 
-/* -------------------------
-   Export / Import / Reset
-   ------------------------- */
-function exportJSON() {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(
-    new Blob([JSON.stringify(state, null, 2)], { type: "application/json" })
-  );
-  a.download = "bb_subdomains_full.json";
-  a.click();
-}
 
-function importJSON() {
-  const i = document.createElement("input");
-  i.type = "file";
-  i.accept = "application/json";
-  i.onchange = (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = () => {
-      try {
-        const parsed = JSON.parse(r.result);
-        state = parsed;
-        saveState();
-        inSummary = false;
-        render();
-      } catch (err) {
-        alert("Invalid JSON file.");
-      }
+/* Export / Import / Reset */
+function exportJSON(){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)]));
+  a.download="bugcheck.json"; a.click();
+}
+function importJSON(){
+  const i=document.createElement("input");
+  i.type="file"; i.accept="application/json";
+  i.onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{
+      state=JSON.parse(r.result);
+      saveState(); inSummary=false; render();
     };
     r.readAsText(f);
   };
   i.click();
 }
-
-function resetAll() {
-  if (confirm("Reset everything?")) {
-    state = { subdomains: {} };
-    currentSub = null;
-    inSummary = false;
-    saveState();
-    render();
+function resetAll(){
+  if(confirm("Reset everything?")){
+    state={subdomains:{}}; currentSub=null;
+    saveState(); render();
   }
 }
 
-/* -------------------------
-   Render everything
-   ------------------------- */
+/* Render */
 function render() {
   renderSubList();
   renderTabs();
-  if (inSummary) renderSummary();
-  else renderChecklist();
-  renderNotes();
+
+  if (inSummary) {
+    document.getElementById("notesSection").style.display = "none";
+    renderSummary();
+  } else {
+    document.getElementById("notesSection").style.display = "block";
+    renderChecklist();
+  }
+  if (!selectedSubdomain) {
+  document.getElementById("notesSection").style.display = "none";
 }
 
-/* Initialize */
+}
+
 render();
-
-
-
