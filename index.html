@@ -3,48 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BugCheck</title>
+  <title>Bug Bounty Checklist – Subdomain Mode</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<div class="layout">
+  <div class="layout">
 
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <h2>BugCheck</h2>
-
-    <div class="add-box">
-      <input id="subInput" placeholder="sub.target.com" />
-      <button onclick="addSub()">Add</button>
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2>Subdomains</h2>
+      <div class="add-box">
+        <input id="subInput" placeholder="sub.target.com" />
+        <button onclick="addSub()">Add</button>
+      </div>
+      <div id="subList"></div>
     </div>
 
-    <div id="subList"></div>
-  </div>
+    <!-- Main Content -->
+    <div class="main">
+      <div class="top-actions">
+        <button onclick="exportJSON()">Export JSON</button>
+        <button onclick="importJSON()">Import JSON</button>
+        <button onclick="showSummary()">Summary</button>
+        <button onclick="resetAll()">Reset All</button>
+      </div>
 
-  <!-- Main Panel -->
-  <div class="main">
+      <!-- Tabs -->
+      <div class="tabs" id="tabButtons">
+        <button class="tab-btn" onclick="switchTab('web')">Web Bugs</button>
+        <button class="tab-btn" onclick="switchTab('api')">API Bugs</button>
+        <button class="tab-btn" onclick="switchTab('logic')">Business Logic Bugs</button>
+      </div>
 
-    <div class="top-actions">
-      <button onclick="exportJSON()">Export JSON</button>
-      <button onclick="importJSON()">Import JSON</button>
-      <button onclick="showSummary()">Summary</button>
-      <button onclick="resetAll()">Reset All</button>
+      <!-- Checklist Area -->
+      <div id="list"></div>
+
+      <!-- Notes Section -->
+      <div id="notesBox" class="section">
+        <h3>Notes</h3>
+        <textarea id="notesArea" rows="6" placeholder="Research notes, PoC, steps, references..."></textarea>
+      </div>
     </div>
 
-    <div class="tabs" id="tabButtons"></div>
-
-    <div id="list"></div>
-
-<div id="notesSection">
-  <h3>Notes</h3>
-  <textarea id="notesArea" rows="6" placeholder="Research notes, PoC, steps, references..."></textarea>
-</div>
-
-
   </div>
-</div>
 
-<script src="bugs.js"></script>
-<script src="app.js"></script>
+  <!-- Scripts -->
+  <script src="bugs.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

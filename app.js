@@ -258,21 +258,10 @@ function resetAll(){
 }
 
 /* Render */
-function render() {
+function render(){
   renderSubList();
   renderTabs();
-
-  if (inSummary) {
-    document.getElementById("notesSection").style.display = "none";
-    renderSummary();
-  } else {
-    document.getElementById("notesSection").style.display = "block";
-    renderChecklist();
-  }
-  if (!selectedSubdomain) {
-  document.getElementById("notesSection").style.display = "none";
+  inSummary ? renderSummary() : renderChecklist();
+  renderNotes();
 }
-
-}
-
 render();
