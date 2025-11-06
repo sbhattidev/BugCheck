@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BugBounty Web Tools</title>
+<link rel="stylesheet" href="./CSS/tools.css">
+</head>
+<body>
+<div class="wrap">
+
+  <h1>BugBounty Toolbox</h1>
+  <p class="lead">Quick access to recon, OSINT, and DNS intel tools.</p>
+
+  <!-- Search / Filters -->
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Search tools...">
+    <div class="filters">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="dns">DNS</button>
+      <button data-filter="subdomains">Subdomains</button>
+      <button data-filter="archive">Archive</button>
+      <button data-filter="osint">OSINT</button>
+      <button data-filter="scanners">Scanners</button>
+    </div>
+  </div>
+
+  <div class="grid" id="toolGrid"></div>
+
+</div>
+
+<script src="./js/tools.js"></script>
+</body>
+</html>
