@@ -69,6 +69,7 @@ function renderSubs(){
     nameSpan.onclick = ()=>{ currentSub=sub; inSummary=false; render(); };
 
     const btns = document.createElement("div");
+    nameSpan.style.width = "50px";
     const edit = document.createElement("button");
     edit.textContent="✏"; edit.onclick=()=>editSub(sub);
     const del = document.createElement("button");
