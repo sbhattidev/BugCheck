@@ -1,255 +1,261 @@
-/* -------------------------
-   Constants
-------------------------- */
-
-const STORAGE_KEY = "bug_bounty_data";
-
-/* -------------------------
-   Global State
-------------------------- */
-
-let currentTab = "Javascript";
+/* ------------------------- STATE & STORAGE ------------------------- */
+const STORAGE_KEY = "bb_subdomain_mode_v5";
+let state = loadState();
 let currentSub = null;
+let currentTab = "Javascript";
 let inSummary = false;
 
-let state = {
-  subs: {}
-};
-
-/* -------------------------
-   Storage
-------------------------- */
-
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
+/* Load & Save */
 function loadState() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) {
-    state = JSON.parse(raw);
-    const subs = Object.keys(state.subs);
-    if (subs.length) currentSub = subs[0];
-  }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { subs: {} }; }
+  catch(e){ return { subs: {} }; }
 }
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
-/* -------------------------
-   Subdomain Logic
-------------------------- */
-
-function addSub() {
-  const input = document.getElementById("subInput");
-  const sub = input.value.trim();
-  if (!sub) return;
-
-  if (!state.subs[sub]) {
-    state.subs[sub] = { notes: "", checks: {} };
+/* ------------------------- SUBDOMAINS ------------------------- */
+function ensureSubdomain(name){
+  if(!state.subs[name]){
+    state.subs[name] = { tabs: {}, notes: "" };
+    for(const t of Object.keys(templates)){
+      state.subs[name].tabs[t] = { checked: {} };
+    }
     saveState();
   }
+}
 
-  currentSub = sub;
-  input.value = "";
-  renderSubs();
+function addSub(){
+  const v = document.getElementById("subInput").value.trim();
+  if(!v) return;
+  ensureSubdomain(v);
+  currentSub = v;
+  document.getElementById("subInput").value = "";
+  inSummary = false;
   render();
 }
 
-function editSub(oldName) {
-  const newName = prompt("Rename subdomain:", oldName);
-  if (!newName) return;
-
-  const name = newName.trim();
-  if (!name || name === oldName) return;
-
-  if (state.subs[name]) {
-    alert("Subdomain already exists");
-    return;
-  }
-
-  state.subs[name] = state.subs[oldName];
-  delete state.subs[oldName];
-
-  if (currentSub === oldName) currentSub = name;
-
+function editSub(old){
+  const n = prompt("Rename subdomain:", old);
+  if(!n || n.trim()==="" || n===old) return;
+  state.subs[n] = state.subs[old];
+  delete state.subs[old];
+  if(currentSub===old) currentSub=n;
   saveState();
-  renderSubs();
   render();
 }
 
-function deleteSub(sub) {
-  if (!state.subs[sub]) return;
-
-  if (!confirm(`Delete subdomain "${sub}"?\nAll data will be lost.`)) return;
-
-  delete state.subs[sub];
-
-  const keys = Object.keys(state.subs);
-  currentSub = keys.length ? keys[0] : null;
-
+function deleteSub(name){
+  if(!confirm("Delete " + name + "?")) return;
+  delete state.subs[name];
+  if(currentSub===name) currentSub=null;
   saveState();
-  renderSubs();
   render();
 }
 
-/* -------------------------
-   Sidebar Render
-------------------------- */
+/* Render subdomain list */
+function renderSubs(){
+  const wrap = document.getElementById("subList");
+  wrap.innerHTML = "";
 
-function renderSubs() {
-  const box = document.getElementById("subList");
-  box.innerHTML = "";
-
-  Object.keys(state.subs).forEach(sub => {
+  Object.keys(state.subs).forEach(sub=>{
     const row = document.createElement("div");
-    row.className = "sub-item";
+    row.className = "sub-item" + (sub === currentSub ? " active" : "");
     row.style.display = "flex";
     row.style.justifyContent = "space-between";
     row.style.alignItems = "center";
 
-    const name = document.createElement("span");
-    name.textContent = sub;
-    name.style.cursor = "pointer";
-    name.onclick = () => {
-      currentSub = sub;
-      render();
-    };
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = sub;
+    nameSpan.style.cursor = "pointer";
+    nameSpan.onclick = ()=>{ currentSub=sub; inSummary=false; render(); };
 
-    const actions = document.createElement("div");
+    const btns = document.createElement("div");
+    const edit = document.createElement("button");
+    edit.textContent="✏"; edit.onclick=()=>editSub(sub);
+    const del = document.createElement("button");
+    del.textContent="🗑"; del.onclick=()=>deleteSub(sub);
+    btns.append(edit,del);
 
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "✏";
-    editBtn.onclick = () => editSub(sub);
-
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "🗑";
-    delBtn.onclick = () => deleteSub(sub);
-
-    actions.append(editBtn, delBtn);
-    row.append(name, actions);
-    box.appendChild(row);
+    row.append(nameSpan, btns);
+    wrap.appendChild(row);
   });
 }
 
-/* -------------------------
-   Tabs
-------------------------- */
-
-function switchTab(tab) {
-  if (tab === "javascript") currentTab = "Javascript";
-  else if (tab === "api") currentTab = "API";
-  else if (tab === "logic") currentTab = "BusinessLogic";
-
+/* ------------------------- TABS ------------------------- */
+function switchTab(tab){
+  if(tab==="javascript") currentTab="Javascript";
+  else if(tab==="api") currentTab="API";
+  else if(tab==="logic") currentTab="BusinessLogic";
   render();
+  updateTabHighlight();
 }
 
-/* -------------------------
-   Checklist Render
-------------------------- */
+function updateTabHighlight(){
+  const tabs = document.querySelectorAll(".tabs button");
+  tabs.forEach(btn=>btn.classList.remove("active"));
+  if(currentTab==="Javascript") tabs[0].classList.add("active");
+  else if(currentTab==="API") tabs[1].classList.add("active");
+  else if(currentTab==="BusinessLogic") tabs[2].classList.add("active");
+}
 
-function render() {
+/* ------------------------- CHECKLIST ------------------------- */
+function renderChecklist(){
   const list = document.getElementById("list");
-  list.innerHTML = "";
+  list.innerHTML="";
+  if(!currentSub || inSummary) return;
 
-  if (!currentSub) {
-    list.innerHTML = "<p>Add or select a subdomain</p>";
-    return;
-  }
+  const data = state.subs[currentSub].tabs[currentTab];
 
-  const data = templates[currentTab];
-  if (!data) return;
-
-  Object.keys(data).forEach(section => {
+  for(const sec in templates[currentTab]){
     const box = document.createElement("div");
-    box.className = "section";
+    box.className="section";
+    box.innerHTML=`<h3>${sec}</h3>`;
 
-    const h3 = document.createElement("h3");
-    h3.textContent = section;
-    box.appendChild(h3);
+    templates[currentTab][sec].forEach(bug=>{
+      const key = bug.text;
+      if(!data.checked[key]) data.checked[key]={scanned:false,found:false};
 
-    data[section].forEach((item, i) => {
-      const id = `${currentTab}|${section}|${i}`;
+      const row = document.createElement("div");
+      row.className="check-row";
 
-      const label = document.createElement("label");
-      label.style.display = "block";
+      row.innerHTML = `
+        <label><input type="checkbox" ${data.checked[key].scanned?"checked":""}
+          onchange="state.subs['${currentSub}'].tabs['${currentTab}'].checked['${key}'].scanned=this.checked; saveState();"> Scanned</label>
 
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.checked = !!state.subs[currentSub].checks[id];
-      cb.onchange = () => {
-        state.subs[currentSub].checks[id] = cb.checked;
-        saveState();
-      };
+        <label><input type="checkbox" ${data.checked[key].found?"checked":""}
+          onchange="state.subs['${currentSub}'].tabs['${currentTab}'].checked['${key}'].found=this.checked; saveState();"> Found</label>
 
-      label.appendChild(cb);
-      label.append(` ${item.text} (${item.severity})`);
-      box.appendChild(label);
+        <span class="item-text">${bug.text}
+          <span class="sev-tag ${bug.severity.toLowerCase()}">${bug.severity}</span>
+        </span>
+      `;
+      box.appendChild(row);
     });
 
     list.appendChild(box);
-  });
+  }
+}
 
-  const notes = document.getElementById("notesArea");
-  notes.value = state.subs[currentSub].notes || "";
-  notes.oninput = () => {
-    state.subs[currentSub].notes = notes.value;
+/* ------------------------- NOTES ------------------------- */
+function renderNotes(){
+  const notesArea = document.getElementById("notesArea");
+  if(!currentSub || inSummary){ notesArea.value=""; notesArea.disabled=true; return; }
+  notesArea.disabled=false;
+  notesArea.value = state.subs[currentSub].notes || "";
+  notesArea.oninput=()=>{
+    state.subs[currentSub].notes = notesArea.value;
     saveState();
   };
 }
 
-/* -------------------------
-   Export / Import
-------------------------- */
+/* ------------------------- SUMMARY ------------------------- */
+function showSummary(){ inSummary=true; render(); }
 
-function exportJSON() {
-  const blob = new Blob(
-    [JSON.stringify(state, null, 2)],
-    { type: "application/json" }
-  );
+function renderSummary(){
+  const root = document.getElementById("list");
+  root.innerHTML="";
+  const container = document.createElement("div");
+  container.className="section";
+  container.innerHTML=`<h3>Summary</h3>`;
 
+  let totalAll=0, scannedAll=0, foundAll=0;
+
+  Object.keys(state.subs).forEach(domain=>{
+    const subBox = document.createElement("div");
+    subBox.className="summary-subdomain";
+
+    const title = document.createElement("h4");
+    title.textContent=domain;
+    subBox.appendChild(title);
+
+    Object.keys(templates).forEach(tab=>{
+      let total=0, scanned=0, found=0;
+      const tabState = state.subs[domain].tabs[tab] || { checked:{} };
+
+      Object.keys(templates[tab]).forEach(section=>{
+        templates[tab][section].forEach(bug=>{
+          total++;
+          const key = bug.text;
+          if(tabState.checked[key]){
+            if(tabState.checked[key].scanned) scanned++;
+            if(tabState.checked[key].found) found++;
+          }
+        });
+      });
+
+      totalAll+=total;
+      scannedAll+=scanned;
+      foundAll+=found;
+
+      const row = document.createElement("div");
+      row.className="summary-row";
+      row.innerHTML = `
+        <div class="summary-label">${tab} — Scanned: ${scanned}/${total} • Found: ${found}</div>
+        <div class="progress-wrap">
+          <div class="progress-bar" style="width:${total?(scanned/total)*100:0}%"></div>
+        </div>
+      `;
+      subBox.appendChild(row);
+    });
+
+    container.appendChild(subBox);
+  });
+
+  const totalBox = document.createElement("div");
+  totalBox.className="summary-total";
+  const percent = totalAll?Math.round((scannedAll/totalAll)*100):0;
+  totalBox.textContent=`TOTAL PROGRESS — ${percent}%  (Scanned ${scannedAll}/${totalAll} • Found ${foundAll})`;
+  container.appendChild(totalBox);
+
+  const back = document.createElement("button");
+  back.textContent="← Back to Checklist";
+  back.className="back-btn";
+  back.style.marginTop="14px";
+  back.onclick=()=>{ inSummary=false; render(); };
+  container.appendChild(back);
+
+  root.appendChild(container);
+}
+
+/* ------------------------- IMPORT / EXPORT / RESET ------------------------- */
+function exportJSON(){
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "bug-bounty-data.json";
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(state,null,2)]));
+  a.download = "bugcheck.json";
   a.click();
 }
-
-function importJSON() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "application/json";
-
-  input.onchange = e => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      state = JSON.parse(reader.result);
+function importJSON(){
+  const i = document.createElement("input");
+  i.type="file";
+  i.accept="application/json";
+  i.onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload=()=>{
+      state = JSON.parse(r.result);
       saveState();
-      renderSubs();
-      currentSub = Object.keys(state.subs)[0] || null;
+      inSummary=false;
       render();
     };
-    reader.readAsText(file);
+    r.readAsText(f);
   };
-
-  input.click();
+  i.click();
+}
+function resetAll(){
+  if(confirm("Reset everything?")){
+    state={subs:{}};
+    currentSub=null;
+    saveState();
+    render();
+  }
 }
 
-/* -------------------------
-   Reset
-------------------------- */
-
-function resetAll() {
-  localStorage.removeItem(STORAGE_KEY);
-  state = { subs: {} };
-  currentSub = null;
+/* ------------------------- RENDER ------------------------- */
+function render(){
   renderSubs();
-  render();
+  renderChecklist();
+  renderNotes();
+  updateTabHighlight();
 }
 
-/* -------------------------
-   Init
-------------------------- */
-
-loadState();
-renderSubs();
+// Initial render
 render();
