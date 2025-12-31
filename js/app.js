@@ -63,13 +63,12 @@ function renderSubs(){
     row.style.justifyContent = "space-between";
     row.style.alignItems = "center";
 
-    const nameSpan = document.createElement("button");
+    const nameSpan = document.createElement("div");
     nameSpan.textContent = sub;
     nameSpan.style.cursor = "pointer";
-    nameSpan.style.width = "15px";
     nameSpan.onclick = ()=>{ currentSub=sub; inSummary=false; render(); };
 
-    const btns = document.createElement("button");
+    const btns = document.createElement("div");
     const edit = document.createElement("button");
     edit.textContent="✏"; edit.onclick=()=>editSub(sub);
     const del = document.createElement("button");
