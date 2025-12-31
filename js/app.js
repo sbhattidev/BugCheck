@@ -66,7 +66,6 @@ function renderSubs(){
     const nameSpan = document.createElement("span");
     nameSpan.textContent = sub;
     nameSpan.style.cursor = "pointer";
-    nameSpan.style.width = "25px";   // add fixed width
     nameSpan.onclick = ()=>{ currentSub=sub; inSummary=false; render(); };
 
     const btns = document.createElement("div");
