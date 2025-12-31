@@ -65,16 +65,26 @@ function renderSubs(){
 
     const nameSpan = document.createElement("span");
     nameSpan.textContent = sub;
-    nameSpan.style.cursor = "pointer";
-    nameSpan.style.width = "25px";   // add fixed width
-    nameSpan.style.display = "inline-block"; // needed for width to apply
     nameSpan.onclick = ()=>{ currentSub=sub; inSummary=false; render(); };
 
     const btns = document.createElement("div");
+    btns.style.cursor = "pointer";
+    btns.style.width = "25px";
+    btns.style.display = "inline-block";
+
     const edit = document.createElement("button");
     edit.textContent="✏"; edit.onclick=()=>editSub(sub);
+    edit.style.cursor = "pointer";
+    edit.style.width = "25px";
+    edit.style.display = "inline-block";
+
     const del = document.createElement("button");
     del.textContent="🗑"; del.onclick=()=>deleteSub(sub);
+    del.style.cursor = "pointer";
+    del.style.width = "25px";
+    del.style.display = "inline-block";
+
+
     btns.append(edit,del);
 
     row.append(nameSpan, btns);
