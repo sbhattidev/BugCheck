@@ -66,6 +66,8 @@ function renderSubs(){
     const nameSpan = document.createElement("span");
     nameSpan.textContent = sub;
     nameSpan.style.cursor = "pointer";
+    nameSpan.style.width = "25px";   // add fixed width
+    nameSpan.style.display = "inline-block"; // needed for width to apply
     nameSpan.onclick = ()=>{ currentSub=sub; inSummary=false; render(); };
 
     const btns = document.createElement("div");
