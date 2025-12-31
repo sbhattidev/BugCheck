@@ -1,9 +1,10 @@
-/* Templates come from bugs.js */
+/* bugs.js provides: templates */
+
 const STORAGE_KEY = "bb_subdomain_mode_v5";
 
 let state = loadState();
 let currentSub = null;
-let currentTab = Object.keys(templates)[0];
+let currentTab = "javascript"; // default
 let inSummary = false;
 
 /* ---------------- Load & Save ---------------- */
@@ -20,24 +21,23 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-/* ---------------- Data Structure ---------------- */
+/* ---------------- Structure ---------------- */
 
 function ensureSubdomain(name) {
   if (!state.subdomains[name]) {
     state.subdomains[name] = {
       notes: "",
-      tabs: {}
+      tabs: {
+        javascript: { checked: {} },
+        api: { checked: {} },
+        logic: { checked: {} }
+      }
     };
-
-    Object.keys(templates).forEach(tab => {
-      state.subdomains[name].tabs[tab] = { checked: {} };
-    });
-
     saveState();
   }
 }
 
-/* ---------------- Subdomain CRUD ---------------- */
+/* ---------------- Subdomains ---------------- */
 
 function addSub() {
   const v = subInput.value.trim();
@@ -58,7 +58,6 @@ function renameSub(oldName) {
   delete state.subdomains[oldName];
 
   if (currentSub === oldName) currentSub = n;
-
   saveState();
   render();
 }
@@ -68,7 +67,6 @@ function deleteSub(name) {
 
   delete state.subdomains[name];
   if (currentSub === name) currentSub = null;
-
   saveState();
   render();
 }
@@ -90,51 +88,38 @@ function renderSubList() {
       render();
     };
 
-    const edit = document.createElement("button");
-    edit.textContent = "✏";
-    edit.onclick = () => renameSub(name);
-
     const del = document.createElement("button");
     del.textContent = "🗑";
     del.onclick = () => deleteSub(name);
 
-    row.append(label, edit, del);
+    row.append(label, del);
     subList.appendChild(row);
   });
 }
 
-/* ---------------- Tabs ---------------- */
+/* ---------------- Tabs (HTML controlled) ---------------- */
 
-function renderTabs() {
-  tabButtons.innerHTML = "";
-  if (inSummary) return;
-
-  Object.keys(templates).forEach(tab => {
-    const b = document.createElement("button");
-    b.textContent = tab;
-    b.className = tab === currentTab ? "active" : "";
-    b.onclick = () => {
-      currentTab = tab;
-      render();
-    };
-    tabButtons.appendChild(b);
-  });
+function switchTab(tab) {
+  currentTab = tab;
+  inSummary = false;
+  render();
 }
 
 /* ---------------- Checklist ---------------- */
 
 function renderChecklist() {
   list.innerHTML = "";
-  if (inSummary || !currentSub) return;
+  if (!currentSub || inSummary) return;
 
   const tabData = state.subdomains[currentSub].tabs[currentTab];
+  const tabTemplate = templates[currentTab];
 
-  Object.keys(templates[currentTab]).forEach(section => {
+  Object.keys(tabTemplate).forEach(section => {
     const box = document.createElement("div");
     box.className = "section";
     box.innerHTML = `<h3>${section}</h3>`;
 
-    templates[currentTab][section].forEach(bug => {
+    tabTemplate[section].forEach(bug => {
       const key = bug.text;
 
       if (!tabData.checked[key]) {
@@ -161,7 +146,6 @@ function renderChecklist() {
           <span class="sev-tag ${bug.severity.toLowerCase()}">${bug.severity}</span>
         </span>
       `;
-
       box.appendChild(row);
     });
 
@@ -169,10 +153,10 @@ function renderChecklist() {
   });
 }
 
-/* ---------------- Notes (SINGLE, SHARED) ---------------- */
+/* ---------------- Notes (ONE per domain) ---------------- */
 
 function renderNotes() {
-  if (inSummary || !currentSub) {
+  if (!currentSub || inSummary) {
     notesArea.value = "";
     notesArea.disabled = true;
     return;
@@ -191,31 +175,7 @@ function renderNotes() {
 
 function showSummary() {
   inSummary = true;
-  render();
-}
-
-function renderSummary() {
-  list.innerHTML = "";
-
-  const box = document.createElement("div");
-  box.className = "section";
-  box.innerHTML = `<h3>Summary</h3>`;
-
-  Object.keys(state.subdomains).forEach(domain => {
-    const h = document.createElement("h4");
-    h.textContent = domain;
-    box.appendChild(h);
-  });
-
-  const back = document.createElement("button");
-  back.textContent = "← Back";
-  back.onclick = () => {
-    inSummary = false;
-    render();
-  };
-
-  box.appendChild(back);
-  list.appendChild(box);
+  list.innerHTML = "<div class='section'><h3>Summary</h3></div>";
 }
 
 /* ---------------- Import / Export ---------------- */
@@ -263,8 +223,7 @@ function resetAll() {
 
 function render() {
   renderSubList();
-  renderTabs();
-  inSummary ? renderSummary() : renderChecklist();
+  renderChecklist();
   renderNotes();
 }
 

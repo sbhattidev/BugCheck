@@ -1,230 +1,55 @@
-/* bugs.js provides: templates */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bug Bounty Checklist – Subdomain Mode</title>
+  <link rel="stylesheet" href="./CSS/styles.css" />
+</head>
+<body>
+  <div class="layout">
 
-const STORAGE_KEY = "bb_subdomain_mode_v5";
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2>Subdomains</h2>
+      <div class="add-box">
+        <input id="subInput" placeholder="sub.target.com" />
+        <button onclick="addSub()">Add</button>
+      </div>
+      <div id="subList"></div>
+    </div>
 
-let state = loadState();
-let currentSub = null;
-let currentTab = "javascript"; // default
-let inSummary = false;
+    <!-- Main Content -->
+    <div class="main">
+      <div class="top-actions">
+        <button onclick="exportJSON()">Export JSON</button>
+        <button onclick="importJSON()">Import JSON</button>
+        <button onclick="showSummary()">Summary</button>
+        <button ><a href="./tools.html" target="_blank">Tools</a></button>
+        <button onclick="resetAll()">Reset All</button>
+      </div>
 
-/* ---------------- Load & Save ---------------- */
+      Tabs
+      <div class="tabs" id="tabButtons">
+        <button class="tab-btn" onclick="switchTab('javascript')">javascript Bugs</button>
+        <button class="tab-btn" onclick="switchTab('api')">API Bugs</button>
+        <button class="tab-btn" onclick="switchTab('logic')">Business Logic Bugs</button>
+      </div>
 
-function loadState() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { subdomains: {} };
-  } catch {
-    return { subdomains: {} };
-  }
-}
+      <!-- Checklist Area -->
+      <div id="list"></div>
 
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
+      <!-- Notes Section -->
+      <div id="notesBox" class="section">
+        <h3>Notes</h3>
+        <textarea id="notesArea" rows="6" placeholder="Research notes, PoC, steps, references..."></textarea>
+      </div>
+    </div>
 
-/* ---------------- Structure ---------------- */
+  </div>
 
-function ensureSubdomain(name) {
-  if (!state.subdomains[name]) {
-    state.subdomains[name] = {
-      notes: "",
-      tabs: {
-        javascript: { checked: {} },
-        api: { checked: {} },
-        logic: { checked: {} }
-      }
-    };
-    saveState();
-  }
-}
-
-/* ---------------- Subdomains ---------------- */
-
-function addSub() {
-  const v = subInput.value.trim();
-  if (!v) return;
-
-  ensureSubdomain(v);
-  currentSub = v;
-  subInput.value = "";
-  inSummary = false;
-  render();
-}
-
-function renameSub(oldName) {
-  const n = prompt("Rename subdomain:", oldName);
-  if (!n || n === oldName) return;
-
-  state.subdomains[n] = state.subdomains[oldName];
-  delete state.subdomains[oldName];
-
-  if (currentSub === oldName) currentSub = n;
-  saveState();
-  render();
-}
-
-function deleteSub(name) {
-  if (!confirm("Delete " + name + "?")) return;
-
-  delete state.subdomains[name];
-  if (currentSub === name) currentSub = null;
-  saveState();
-  render();
-}
-
-/* ---------------- Sidebar ---------------- */
-
-function renderSubList() {
-  subList.innerHTML = "";
-
-  Object.keys(state.subdomains).forEach(name => {
-    const row = document.createElement("div");
-    row.className = "sub-item" + (name === currentSub ? " active" : "");
-
-    const label = document.createElement("span");
-    label.textContent = name;
-    label.onclick = () => {
-      currentSub = name;
-      inSummary = false;
-      render();
-    };
-
-    const del = document.createElement("button");
-    del.textContent = "🗑";
-    del.onclick = () => deleteSub(name);
-
-    row.append(label, del);
-    subList.appendChild(row);
-  });
-}
-
-/* ---------------- Tabs (HTML controlled) ---------------- */
-
-function switchTab(tab) {
-  currentTab = tab;
-  inSummary = false;
-  render();
-}
-
-/* ---------------- Checklist ---------------- */
-
-function renderChecklist() {
-  list.innerHTML = "";
-  if (!currentSub || inSummary) return;
-
-  const tabData = state.subdomains[currentSub].tabs[currentTab];
-  const tabTemplate = templates[currentTab];
-
-  Object.keys(tabTemplate).forEach(section => {
-    const box = document.createElement("div");
-    box.className = "section";
-    box.innerHTML = `<h3>${section}</h3>`;
-
-    tabTemplate[section].forEach(bug => {
-      const key = bug.text;
-
-      if (!tabData.checked[key]) {
-        tabData.checked[key] = { scanned: false, found: false };
-      }
-
-      const row = document.createElement("div");
-      row.className = "check-row";
-      row.innerHTML = `
-        <label>
-          <input type="checkbox" ${tabData.checked[key].scanned ? "checked" : ""}
-            onchange="state.subdomains['${currentSub}'].tabs['${currentTab}'].checked['${key}'].scanned=this.checked; saveState();">
-          Scanned
-        </label>
-
-        <label>
-          <input type="checkbox" ${tabData.checked[key].found ? "checked" : ""}
-            onchange="state.subdomains['${currentSub}'].tabs['${currentTab}'].checked['${key}'].found=this.checked; saveState();">
-          Found
-        </label>
-
-        <span class="item-text">
-          ${bug.text}
-          <span class="sev-tag ${bug.severity.toLowerCase()}">${bug.severity}</span>
-        </span>
-      `;
-      box.appendChild(row);
-    });
-
-    list.appendChild(box);
-  });
-}
-
-/* ---------------- Notes (ONE per domain) ---------------- */
-
-function renderNotes() {
-  if (!currentSub || inSummary) {
-    notesArea.value = "";
-    notesArea.disabled = true;
-    return;
-  }
-
-  notesArea.disabled = false;
-  notesArea.value = state.subdomains[currentSub].notes;
-
-  notesArea.oninput = () => {
-    state.subdomains[currentSub].notes = notesArea.value;
-    saveState();
-  };
-}
-
-/* ---------------- Summary ---------------- */
-
-function showSummary() {
-  inSummary = true;
-  list.innerHTML = "<div class='section'><h3>Summary</h3></div>";
-}
-
-/* ---------------- Import / Export ---------------- */
-
-function exportJSON() {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(
-    new Blob([JSON.stringify(state, null, 2)])
-  );
-  a.download = "bugcheck.json";
-  a.click();
-}
-
-function importJSON() {
-  const i = document.createElement("input");
-  i.type = "file";
-  i.accept = "application/json";
-
-  i.onchange = e => {
-    const f = e.target.files[0];
-    if (!f) return;
-
-    const r = new FileReader();
-    r.onload = () => {
-      state = JSON.parse(r.result);
-      saveState();
-      inSummary = false;
-      render();
-    };
-    r.readAsText(f);
-  };
-
-  i.click();
-}
-
-function resetAll() {
-  if (!confirm("Reset everything?")) return;
-  state = { subdomains: {} };
-  currentSub = null;
-  saveState();
-  render();
-}
-
-/* ---------------- Render ---------------- */
-
-function render() {
-  renderSubList();
-  renderChecklist();
-  renderNotes();
-}
-
-render();
+  <!-- Scripts -->
+  <script src="./js/bugs.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
