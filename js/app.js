@@ -75,12 +75,11 @@ function renderSubs(){
     const edit = document.createElement("button");
     edit.textContent="✏"; edit.onclick=()=>editSub(sub);
     edit.style.cursor = "pointer";
-    edit.style.display = "inline-block";
+  
 
     const del = document.createElement("button");
     del.textContent="🗑"; del.onclick=()=>deleteSub(sub);
     del.style.cursor = "pointer";
-    del.style.display = "inline-block";
 
 
     btns.append(edit,del);
