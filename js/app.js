@@ -68,7 +68,7 @@ function renderSubs(){
     nameSpan.style.cursor = "pointer";
     nameSpan.onclick = ()=>{ currentSub=sub; inSummary=false; render(); };
 
-    const btns = document.createElement("div");
+    const btns = document.createElement("button");
     nameSpan.style.width = "50px";
     const edit = document.createElement("button");
     edit.textContent="✏"; edit.onclick=()=>editSub(sub);
