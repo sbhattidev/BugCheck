@@ -53,24 +53,84 @@ function addSub() {
   render();
 }
 
+function editSub(oldName) {
+  const newName = prompt("Rename subdomain:", oldName);
+  if (!newName) return;
+
+  const name = newName.trim();
+  if (!name || name === oldName) return;
+
+  if (state.subs[name]) {
+    alert("Subdomain already exists");
+    return;
+  }
+
+  state.subs[name] = state.subs[oldName];
+  delete state.subs[oldName];
+
+  if (currentSub === oldName) currentSub = name;
+
+  saveState();
+  renderSubs();
+  render();
+}
+
+function deleteSub(sub) {
+  if (!state.subs[sub]) return;
+
+  if (!confirm(`Delete subdomain "${sub}"?\nAll data will be lost.`)) return;
+
+  delete state.subs[sub];
+
+  const keys = Object.keys(state.subs);
+  currentSub = keys.length ? keys[0] : null;
+
+  saveState();
+  renderSubs();
+  render();
+}
+
+/* -------------------------
+   Sidebar Render
+------------------------- */
+
 function renderSubs() {
   const box = document.getElementById("subList");
   box.innerHTML = "";
 
   Object.keys(state.subs).forEach(sub => {
-    const div = document.createElement("div");
-    div.className = "sub-item";
-    div.textContent = sub;
-    div.onclick = () => {
+    const row = document.createElement("div");
+    row.className = "sub-item";
+    row.style.display = "flex";
+    row.style.justifyContent = "space-between";
+    row.style.alignItems = "center";
+
+    const name = document.createElement("span");
+    name.textContent = sub;
+    name.style.cursor = "pointer";
+    name.onclick = () => {
       currentSub = sub;
       render();
     };
-    box.appendChild(div);
+
+    const actions = document.createElement("div");
+
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "✏";
+    editBtn.onclick = () => editSub(sub);
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "🗑";
+    delBtn.onclick = () => deleteSub(sub);
+
+    actions.append(editBtn, delBtn);
+    row.append(name, actions);
+    box.appendChild(row);
   });
 }
 
 /* -------------------------
-   Tabs (FIXED)
+   Tabs
 ------------------------- */
 
 function switchTab(tab) {
@@ -78,12 +138,11 @@ function switchTab(tab) {
   else if (tab === "api") currentTab = "API";
   else if (tab === "logic") currentTab = "BusinessLogic";
 
-  inSummary = false;
   render();
 }
 
 /* -------------------------
-   Checklist Rendering
+   Checklist Render
 ------------------------- */
 
 function render() {
@@ -98,16 +157,16 @@ function render() {
   const data = templates[currentTab];
   if (!data) return;
 
-  Object.keys(data).forEach(category => {
-    const section = document.createElement("div");
-    section.className = "category";
+  Object.keys(data).forEach(section => {
+    const box = document.createElement("div");
+    box.className = "section";
 
     const h3 = document.createElement("h3");
-    h3.textContent = category;
-    section.appendChild(h3);
+    h3.textContent = section;
+    box.appendChild(h3);
 
-    data[category].forEach((item, index) => {
-      const id = `${currentTab}|${category}|${index}`;
+    data[section].forEach((item, i) => {
+      const id = `${currentTab}|${section}|${i}`;
 
       const label = document.createElement("label");
       label.style.display = "block";
@@ -122,10 +181,10 @@ function render() {
 
       label.appendChild(cb);
       label.append(` ${item.text} (${item.severity})`);
-      section.appendChild(label);
+      box.appendChild(label);
     });
 
-    list.appendChild(section);
+    list.appendChild(box);
   });
 
   const notes = document.getElementById("notesArea");
@@ -137,7 +196,7 @@ function render() {
 }
 
 /* -------------------------
-   Export / Import JSON
+   Export / Import
 ------------------------- */
 
 function exportJSON() {
