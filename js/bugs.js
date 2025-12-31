@@ -3,7 +3,7 @@
    ------------------------- */
 
 const templates = {
-  "Web": {
+  "Javascript": {
     "Recon": [
       { text: "Find staging or development sites (exposed environments)", severity: "Low" },
       { text: "Search JS files for API keys, endpoints, or secrets", severity: "Medium" },
