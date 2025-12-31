@@ -6,17 +6,16 @@ body {
   margin: 0;
   display: flex;
   height: 100vh;
-  /* overflow: hidden; */
 }
 a {
   text-decoration: none;
   color: var(--link-color);
 }
-
 button, input, textarea {
   font-family: inherit;
   outline: none;
   border: none;
+  color: inherit;
 }
 
 /* ========== Layout ========== */
@@ -35,19 +34,16 @@ button, input, textarea {
   display: flex;
   flex-direction: column;
 }
-
 .sidebar h2 {
   font-size: 20px;
   margin: 0 0 16px;
   font-weight: 600;
 }
-
 .add-box {
   display: flex;
   gap: 6px;
   margin-bottom: 14px;
 }
-
 .add-box input {
   flex: 1;
   background: #222;
@@ -56,7 +52,6 @@ button, input, textarea {
   color: #eee;
   border-radius: 4px;
 }
-
 .add-box button {
   background: #347cff;
   padding: 6px 10px;
@@ -65,13 +60,11 @@ button, input, textarea {
   color: white;
   font-size: 14px;
 }
-
 #subList {
   overflow-y: auto;
   flex: 1;
-  margin-top: 10px;
+  min-height: 0;
 }
-
 .sub-item {
   padding: 8px 6px;
   cursor: pointer;
@@ -80,12 +73,14 @@ button, input, textarea {
   font-size: 14px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s;
 }
 .sub-item.active {
   background: #347cff33;
   border-left: 3px solid #347cff;
+  font-weight: bold;
 }
-
 .sub-item button {
   background: #222;
   color: #bbb;
@@ -101,7 +96,8 @@ button, input, textarea {
   display: flex;
   flex-direction: column;
   padding: 18px;
-  overflow: hidden;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 /* Top Buttons */
@@ -110,7 +106,6 @@ button, input, textarea {
   gap: 10px;
   margin-bottom: 16px;
 }
-
 .top-actions button {
   background: #222;
   padding: 8px 14px;
@@ -130,7 +125,6 @@ button, input, textarea {
   gap: 10px;
   margin-bottom: 14px;
 }
-
 .tabs button {
   padding: 8px 14px;
   background: #222;
@@ -139,7 +133,7 @@ button, input, textarea {
   border-radius: 4px;
   cursor: pointer;
 }
-.tabs .active {
+.tabs button.active {
   background: #347cff;
   color: white;
   border-color: #347cff;
@@ -153,26 +147,21 @@ button, input, textarea {
   border-radius: 6px;
   margin-bottom: 14px;
 }
-
 .section h3 {
   margin: 0 0 10px;
   font-size: 16px;
   font-weight: 600;
 }
-
-/* Checklist rows */
 .check-row {
   display: flex;
   align-items: center;
   gap: 14px;
   margin: 6px 0;
 }
-
 .check-row input {
   transform: scale(1.2);
   cursor: pointer;
 }
-
 .item-text {
   flex: 1;
   font-size: 14px;
@@ -187,18 +176,12 @@ button, input, textarea {
   font-weight: 600;
   text-transform: uppercase;
 }
-
 .sev-tag.low { background: #264d00; color: #8dff78; }
 .sev-tag.medium { background: #665200; color: #ffe869; }
 .sev-tag.high { background: #552000; color: #ff9a6b; }
 .sev-tag.critical { background: #5c0000; color: #ff7a7a; }
 
 /* ========== Notes ========== */
-#notesSection {
-  display: none;
-}
-
-
 #notesArea {
   width: 100%;
   background: #111;
@@ -209,35 +192,11 @@ button, input, textarea {
   resize: vertical;
 }
 
-/* Scrollbars */
+/* ========== Scrollbars ========== */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
 
-/* Make subdomain list scroll */
-#subList {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-/* Make main content scroll */
-.main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-/* Make the checklist list scroll independently if needed */
-#list {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-
-/* ===== Neon Summary Bars ===== */
+/* ========== Summary Bars ========== */
 .summary-subdomain {
   background: #111;
   padding: 16px;
@@ -245,17 +204,14 @@ button, input, textarea {
   margin-bottom: 14px;
   border: 1px solid #222;
 }
-
 .summary-subdomain h4 {
   margin: 0 0 8px 0;
   color: #fff;
   font-size: 16px;
 }
-
 .summary-row {
   margin-bottom: 8px;
 }
-
 .progress-wrap {
   background: #1a1a1a;
   border-radius: 6px;
@@ -263,20 +219,17 @@ button, input, textarea {
   overflow: hidden;
   border: 1px solid #333;
 }
-
 .progress-bar {
   height: 100%;
   transition: width 0.35s ease;
   background: linear-gradient(90deg, #7a00ff, #b86bff);
   box-shadow: 0 0 12px #b86bffcc;
 }
-
 .summary-label {
   font-size: 13px;
   margin-bottom: 4px;
   color: #ccc;
 }
-
 .summary-total {
   margin-top: 14px;
   padding: 12px;
